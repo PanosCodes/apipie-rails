@@ -245,7 +245,6 @@ module Apipie
       @resource_descriptions ||= Apipie::ResourceDescriptionsCollection.new
       @controller_to_resource_id ||= {}
       @param_groups ||= {}
-      @swagger_generator = Apipie::SwaggerGenerator.new(self)
 
       # what versions does the controller belong in (specified by resource_description)?
       @controller_versions ||= Hash.new { |h, controller| h[controller.to_s] = [] }
@@ -263,29 +262,26 @@ module Apipie
     def json_schema_for_method_response(version, controller_name, method_name, return_code, allow_nulls)
       method = @resource_descriptions[version][controller_name].method_description(method_name)
       raise NoDocumentedMethod.new(controller_name, method_name) if method.nil?
-      @swagger_generator.json_schema_for_method_response(method, return_code, allow_nulls)
+
+    Apipie::Generator::Swagger2.
+      new(self).
+      json_schema_for_method_response(method, return_code, allow_nulls)
     end
 
     def json_schema_for_self_describing_class(cls, allow_nulls)
-      @swagger_generator.json_schema_for_self_describing_class(cls, allow_nulls)
+      Apipie::Generator::Swagger2.
+        new(self).
+        json_schema_for_self_describing_class(cls, allow_nulls)
     end
 
     def to_swagger_json(version, resource_name, method_name, lang, clear_warnings=false)
       return unless valid_search_args?(version, resource_name, method_name)
 
-      # if resource_name is blank, take just resources which have some methods because
-      # we dont want to show eg ApplicationController as resource
-      # otherwise, take only the specified resource
-      _resources = resource_descriptions[version].inject({}) do |result, (k,v)|
-         if resource_name.blank?
-           result[k] = v unless v._methods.blank?
-         else
-           result[k] = v if k == resource_name
-         end
-         result
-       end
+      Apipie::Generator::Swagger2Config.instance.suppress_warnings = clear_warnings
 
-      @swagger_generator.generate_from_resources(version,_resources, method_name, lang, clear_warnings)
+      Apipie::Generator::Swagger2.
+        new(self).
+        generate(version, resource_name, method_name, lang)
     end
 
     def to_json(version, resource_name, method_name, lang)
