@@ -25,3 +25,5 @@ require 'apipie/extractor'
 require "apipie/version"
 require "apipie/swagger_generator"
 require "apipie/generator/swagger2_config"
+require "apipie/generator/json"
+require "apipie/json_template_transformer"

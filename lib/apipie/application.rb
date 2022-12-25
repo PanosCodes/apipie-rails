@@ -289,32 +289,17 @@ module Apipie
     end
 
     def to_json(version, resource_name, method_name, lang)
-
       return unless valid_search_args?(version, resource_name, method_name)
 
-      _resources = if resource_name.blank?
-        # take just resources which have some methods because
-        # we dont want to show eg ApplicationController as resource
-        resource_descriptions[version].inject({}) do |result, (k,v)|
-          result[k] = v.to_json(nil, lang) unless v._methods.blank?
-          result
-        end
-      else
-        [@resource_descriptions[version][resource_name].to_json(method_name, lang)]
-      end
+      document = Apipie::Generator::Json.
+        new(self).
+        generate(version, resource_name, lang)
 
-      url_args = Apipie.configuration.version_in_url ? version : ''
-
-      {
-        :docs => {
-          :name => Apipie.configuration.app_name,
-          :info => Apipie.app_info(version, lang),
-          :copyright => Apipie.configuration.copyright,
-          :doc_url => Apipie.full_url(url_args),
-          :api_url => Apipie.api_base_url(version),
-          :resources => _resources
-        }
-      }
+      Apipie::JsonTemplateTransformer.transform(
+        document: document,
+        language: lang,
+        resource_name: resource_name
+      )
     end
 
     def api_controllers_paths

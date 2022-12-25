@@ -93,6 +93,10 @@ module Apipie
       @_methods.keys.map(&:to_s).include?(method_name.to_s)
     end
 
+    def for_json(method_name: nil, lang: nil)
+      to_json(method_name, lang)
+    end
+
     def to_json(method_name = nil, lang = nil)
       if method_name && !valid_method_name?(method_name)
         raise "Method #{method_name} not found for resource #{_name}"
