@@ -52,7 +52,7 @@ namespace :apipie do
   end
 
   desc "Generate static swagger json"
-  task :static_swagger_json, [:version, :swagger_content_type_input, :filename_suffix] => :environment do |t, args|
+  task :static_swagger_json, [:version, :content_type_input, :filename_suffix] => :environment do |t, args|
     with_loaded_documentation do
       out = ENV["OUT"] || File.join(::Rails.root, Apipie.configuration.doc_path, 'apidoc')
       generate_swagger_using_args(args, out)
@@ -65,7 +65,7 @@ namespace :apipie do
   # reference files have the
   # if more than 3 references are detected, the older ones will be purged
   desc "Did swagger output change since the last execution of this task?"
-  task :did_swagger_change, [:version, :swagger_content_type_input, :filename_suffix] => :environment do |t, args|
+  task :did_swagger_change, [:version, :content_type_input, :filename_suffix] => :environment do |t, args|
     with_loaded_documentation do
       out = ENV["OUT_REF"] || File.join(::Rails.root, Apipie.configuration.doc_path, 'apidoc_ref')
       paths = generate_swagger_using_args(args, out)
@@ -195,13 +195,18 @@ namespace :apipie do
   end
 
   def generate_swagger_using_args(args, out)
-    args.with_defaults(:version => Apipie.configuration.default_version,
-                       :swagger_content_type_input => Apipie.configuration.swagger_content_type_input || :form_data,
-                       :filename_suffix => nil)
-    Apipie.configuration.swagger_content_type_input = args[:swagger_content_type_input].to_sym
+    args.with_defaults(
+      version: Apipie.configuration.default_version,
+      content_type_input: Apipie.configuration.swagger2.content_type_input,
+      filename_suffix: nil
+    )
+
+    Apipie.configuration.swagger2.content_type_input =
+      args[:content_type_input].to_sym
+
     count = 0
 
-    sfx = args[:filename_suffix] || "_#{args[:swagger_content_type_input]}"
+    sfx = args[:filename_suffix] || "_#{args[:content_type_input]}"
 
     paths = []
 

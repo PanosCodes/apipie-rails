@@ -1,5 +1,6 @@
 module Apipie
   class Configuration
+    extend Forwardable
 
     attr_accessor :app_name, :app_info, :copyright, :compress_examples,
       :markup, :disqus_shortname,
@@ -8,19 +9,23 @@ module Apipie
       :validate, :validate_value, :validate_presence, :validate_key, :action_on_non_validated_keys, :authenticate, :doc_path,
       :show_all_examples, :process_params, :update_checksum, :checksum_path,
       :link_extension, :record, :languages, :translate, :locale, :default_locale,
-      :persist_show_in_doc, :authorize, :ignore_allow_blank_false,
-      :swagger_include_warning_tags, :swagger_content_type_input, :swagger_json_input_uses_refs,
-      :swagger_suppress_warnings, :swagger_api_host, :swagger_generate_x_computed_id_field,
-      :swagger_allow_additional_properties_in_response, :swagger_responses_use_refs,
-      :swagger_schemes, :swagger_security_definitions, :swagger_global_security
+      :persist_show_in_doc, :authorize, :ignore_allow_blank_false
+
+    def_delegators :swagger2, :swagger_include_warning_tags, :swagger_content_type_input,
+      :swagger_content_type_input=, :swagger_json_input_uses_refs, :swagger_suppress_warnings,
+      :swagger_suppress_warnings=, :swagger_api_host, :swagger_generate_x_computed_id_field,
+      :swagger_allow_additional_properties_in_response,:swagger_allow_additional_properties_in_response=,
+      :swagger_responses_use_refs, :swagger_schemes, :swagger_security_definitions, :swagger_global_security,
+      :swagger_include_warning_tags?, :swagger_json_input_uses_refs?,
+      :swagger_responses_use_refs?, :swagger_generate_x_computed_id_field?
+
+    def swagger2
+      Apipie::Generator::Swagger2Config.instance
+    end
 
     alias_method :validate?, :validate
     alias_method :required_by_default?, :required_by_default
     alias_method :namespaced_resources?, :namespaced_resources
-    alias_method :swagger_include_warning_tags?, :swagger_include_warning_tags
-    alias_method :swagger_json_input_uses_refs?, :swagger_json_input_uses_refs
-    alias_method :swagger_responses_use_refs?, :swagger_responses_use_refs
-    alias_method :swagger_generate_x_computed_id_field?, :swagger_generate_x_computed_id_field
 
     # matcher to be used in Dir.glob to find controllers to be reloaded e.g.
     #
@@ -45,21 +50,22 @@ module Apipie
 
     def reload_controllers?
       @reload_controllers = Rails.env.development? unless defined? @reload_controllers
-      return @reload_controllers && @api_controllers_matcher
+
+      @reload_controllers && @api_controllers_matcher
     end
 
     def validate_value
-      return (validate? && @validate_value)
+      validate? && @validate_value
     end
     alias_method :validate_value?, :validate_value
 
     def validate_presence
-      return (validate? && @validate_presence)
+      validate? && @validate_presence
     end
     alias_method :validate_presence?, :validate_presence
 
     def validate_key
-      return (validate? && @validate_key)
+      validate? && @validate_key
     end
     alias_method :validate_key?, :validate_key
 
@@ -67,7 +73,7 @@ module Apipie
       @process_params
     end
     # set to true if you want to use pregenerated documentation cache and avoid
-    # generating the documentation on runtime (usefull for production
+    # generating the documentation on runtime (useful for production
     # environment).
     # You can generate the cache by running
     #
@@ -99,7 +105,7 @@ module Apipie
     end
 
     # array of controller names (strings) (might include actions as well)
-    # to be ignored # when generationg the documentation
+    # to be ignored # when generating the documentation
     # e.g. %w[Api::CommentsController Api::PostsController#post]
     attr_writer :ignored
     def ignored
@@ -176,17 +182,6 @@ module Apipie
       @translate = lambda { |str, locale| str }
       @persist_show_in_doc = false
       @routes_formatter = RoutesFormatter.new
-      @swagger_content_type_input = :form_data  # this can be :json or :form_data
-      @swagger_json_input_uses_refs = false
-      @swagger_include_warning_tags = false
-      @swagger_suppress_warnings = false #[105,100,102]
-      @swagger_api_host = "localhost:3000"
-      @swagger_generate_x_computed_id_field = false
-      @swagger_allow_additional_properties_in_response = false
-      @swagger_responses_use_refs = true
-      @swagger_schemes = [:https]
-      @swagger_security_definitions = {}
-      @swagger_global_security = []
     end
   end
 end
