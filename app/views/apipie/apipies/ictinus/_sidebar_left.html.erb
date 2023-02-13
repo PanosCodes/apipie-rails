@@ -1,0 +1,26 @@
+<aside class="flex-shrink-0 p-3 bg-white">
+  <ul class="list-unstyled ps-0">
+    <% @doc[:resources].each do |resource_name, resource_description| %>
+      <li class="mb-1">
+        <button class="btn btn-toggle align-items-center rounded collapsed" data-bs-toggle="collapse" data-bs-target="#<%= resource_name %>-collapse" aria-expanded="true">
+          <%= resource_description[:doc_url] %>
+        </button>
+
+        <div class="collapse show" id="<%= resource_name %>-collapse">
+          <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+            <% resource_description[:methods].each do |method_description| %>
+              <% method_description[:apis].each do |api| %>
+                <li>
+                  <a href="<%= apipie_http_verb_path(resource: resource_name, method: method_description[:name], http_verb: api[:http_method]) %>" class="link-dark rounded">
+                    <%= render partial: "#{theme_path}/http_method", locals: { http_method: api[:http_method] } %>
+                    <%= api[:api_url] %>
+                  </a>
+                </li>
+              <% end %>
+            <% end %>
+          </ul>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+</aside>

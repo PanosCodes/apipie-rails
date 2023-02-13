@@ -172,7 +172,7 @@ module Apipie
       @api_base_url = ActiveSupport::HashWithIndifferentAccess.new
       @api_action_matcher = proc { |controller| controller.params[:action] }
       @doc_base_url = "/apipie"
-      @layout = "apipie/apipie"
+      @layout = "apipie/ictinus"
       @disqus_shortname = nil
       @default_version = "1.0"
       @debug = false

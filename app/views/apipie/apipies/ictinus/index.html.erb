@@ -1,0 +1,54 @@
+<div><%= raw @doc[:info] %></div>
+
+<h1 class='page-header'><%= t('apipie.resources') %></h1>
+
+<% @doc[:resources].sort_by(&:first).each do |key, api| %>
+  <div class="card mb-4">
+    <div class="card-body mb-0 pb-0">
+      <h5 class="card-title">
+        <a href='<%= api[:doc_url] %><%= @doc[:link_extension] %>'>
+          <%= api[:name] %>
+        </a>
+      </h5>
+
+      <% if api[:short_description].present? %>
+        <p class="card-text">
+          <%= api[:short_description] %>
+        </p>
+      <% end %>
+
+      <% if api[:deprecated] %>
+        <small class="badge bg-light border border-danger text-danger">
+          DEPRECATED
+        </small>
+      <% end %>
+    </div>
+
+    <div class="card-body">
+      <% api[:methods].select { |method| method[:show] }.each do |m| %>
+        <div class="card mb-2">
+          <ul class="list-group list-group-flush">
+            <% m[:apis].each do |api| %>
+              <li class="list-group-item">
+                <%= render partial: "#{theme_path}/http_method", locals: { http_method: api[:http_method] } %>
+
+                <a href='<%= m[:doc_url] %><%= @doc[:link_extension] %>'>
+                  <%= api[:api_url] %>
+                </a>
+
+                <% if api[:deprecated] %>
+                  <code>DEPRECATED</code>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+<% end %>
+
+<% unless content_for(:apipie_footer) == @doc[:copyright] %>
+  <%= content_for :apipie_footer, raw(@doc[:copyright]) %>
+<% end %>

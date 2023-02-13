@@ -6,49 +6,20 @@ module Apipie
     layout Apipie.configuration.layout
 
     around_action :set_script_name
-    before_action :authenticate
+    around_action :swagger_warnings, if: :swagger?
 
-    def authenticate
-      if Apipie.configuration.authenticate
-        instance_eval(&Apipie.configuration.authenticate)
-      end
-    end
-
+    before_action :authenticate, :authorize, :set_language, :prepare_params!,
+                  :set_format_from_extension, :set_version, :set_doc,
+                  :set_versions, :set_languages
+    before_action :set_resource, only: [:resource, :index]
+    before_action :set_method, only: [:method, :index]
+    before_action :set_api, only: [:http_verb]
 
     def index
-      params[:version] ||= Apipie.configuration.default_version
-
-      get_format
-
-      if params[:type].to_s == 'swagger' && params[:format].to_s == 'json'
-        head :forbidden and return if Apipie.configuration.authorize
-        should_render_swagger = true
-      end
-
       respond_to do |format|
-
         if Apipie.configuration.use_cache?
           render_from_cache
           return
-        end
-
-        @language = get_language
-
-        Apipie.load_documentation if Apipie.configuration.reload_controllers? || !Rails.application.config.eager_load
-
-        I18n.locale = @language
-
-        if should_render_swagger
-          prev_warning_value = Apipie.configuration.generator.swagger.suppress_warnings
-          begin
-            Apipie.configuration.generator.swagger.suppress_warnings = true
-            @doc = Apipie.to_swagger_json(params[:version], params[:resource], params[:method], @language)
-          ensure
-            Apipie.configuration.generator.swagger.suppress_warnings = prev_warning_value
-          end
-        else
-          @doc = Apipie.to_json(params[:version], params[:resource], params[:method], @language)
-          @doc = authorized_doc
         end
 
         format.json do
@@ -60,52 +31,156 @@ module Apipie
         end
 
         format.html do
-          unless @doc
-            render 'apipie_404', :status => 404
-            return
-          end
+          render 'apipie_404', :status => 404 and return if @doc.blank?
+          render "getting_started" and return if @doc[:resources].blank?
 
-          @versions = Apipie.available_versions
-          @doc = @doc[:docs]
-          @doc[:link_extension] = (@language ? ".#{@language}" : '')+Apipie.configuration.link_extension
-          if @doc[:resources].blank?
-            render "getting_started" and return
-          end
-          @resource = @doc[:resources].first if params[:resource].present?
-          @method = @resource[:methods].first if params[:method].present?
-          @languages = Apipie.configuration.languages
-
-          if @resource && @method
-            render 'method'
+          if @resource.present? && @method.present?
+            return method
           elsif @resource
-            render 'resource'
+            return resource
           elsif params[:resource].present? || params[:method].present?
             render 'apipie_404', :status => 404
           else
-            render 'index'
+            render "#{theme_path}/index"
           end
         end
       end
+    end
+
+    def resource
+      render "#{theme_path}/resource"
+    end
+
+    def method
+      render "#{theme_path}/method"
+    end
+
+    def http_verb
+      render "#{theme_path}/http_verb"
     end
 
     def apipie_checksum
     end
 
+    def swagger
+      render json: @doc
+    end
+
     private
+
     helper_method :heading
 
-    def get_language
-      return nil unless Apipie.configuration.translate
-      lang = Apipie.configuration.default_locale
-      [:resource, :method, :version].each do |par|
-        next unless params[par]
-        splitted = params[par].split('.')
-        if splitted.length > 1 && (Apipie.configuration.languages.include?(splitted.last) || Apipie.configuration.default_locale == splitted.last)
-          lang = splitted.last
-          params[par].sub!(".#{lang}", '')
-        end
+    def authorize
+      if swagger? && Apipie.configuration.authorize
+        head :forbidden
       end
-      lang
+    end
+
+    def authenticate
+      if Apipie.configuration.authenticate
+        instance_eval(&Apipie.configuration.authenticate)
+      end
+    end
+
+    def set_doc
+      if Apipie.configuration.reload_controllers? || !Rails.application.config.eager_load
+        Apipie.load_documentation
+      end
+
+      if swagger?
+        @doc = Apipie.to_swagger_json(@version, params[:resource], params[:method], @language)
+      else
+        if ictinus?
+          @doc = Apipie.to_json(params[:version], nil, nil, @language)
+        else
+          @doc = Apipie.to_json(params[:version], params[:resource], params[:method], @language)
+        end
+
+        @doc = authorized_doc
+      end
+
+      @doc = @doc[:docs]
+      @doc[:link_extension] = link_extension
+    end
+
+    def set_versions
+      @versions = Apipie.available_versions
+    end
+
+    def set_languages
+      @languages = Apipie.configuration.languages
+    end
+
+    def set_language
+      @language = language_results[:language]
+
+      I18n.locale = @language
+    end
+
+    def prepare_params!
+      if language_results[:param].present?
+        params[language_results[:param]].sub!(link_extension, '')
+      end
+    end
+
+    def set_version
+      params[:version] ||= Apipie.configuration.default_version
+    end
+
+    # @return [Hash]
+    def language_results
+      @language_results ||= RequestLanguageService.call(request) || {}
+    end
+
+    def set_resource
+      @resource = doc_presenter.resource(params[:resource])
+    end
+
+    def set_method
+      @resource = doc_presenter.resource(params[:resource])
+
+      if params[:method].present?
+        @method = doc_presenter.action(params[:resource], params[:method])
+      end
+    end
+
+    def set_api
+      @resource = doc_presenter.resource(params[:resource])
+      @method = doc_presenter.action(params[:resource], params[:method])
+      @api = doc_presenter.api(params[:resource], params[:method], params[:http_verb])
+
+      examples_file = Rails.root.join(Apipie.configuration.doc_path, 'apipie_examples.json')
+
+      if examples_file.exist?
+        contents = Rails.root.join(Apipie.configuration.doc_path, 'apipie_examples.json').read
+        api = "#{@resource[:id]}##{@method[:name]}".downcase
+        @examples = (JSON.parse(contents) || {})[api]
+      else
+        @examples = []
+      end
+    end
+
+    def swagger?
+      params[:type].to_s == 'swagger' && params[:format].to_s == 'json'
+    end
+
+    def swagger_warnings
+      prev_warning_value = Apipie.configuration.swagger_suppress_warnings
+
+      begin
+        Apipie.configuration.swagger_suppress_warnings = true
+        yield
+      ensure
+        Apipie.configuration.swagger_suppress_warnings = prev_warning_value
+      end
+    end
+
+    # @return [String]
+    #   @example .en.html
+    def link_extension
+      language_part = @language ? ".#{@language}" : ''
+
+      "#{language_part}#{Apipie.configuration.link_extension}"
     end
 
     def authorized_doc
@@ -127,7 +202,7 @@ module Apipie
       new_doc
     end
 
-    def authorize_resource resource
+    def authorize_resource(resource)
       if instance_exec(resource[:id], nil, resource, &Apipie.configuration.authorize)
         resource[:methods] = resource[:methods].select do |m|
           instance_exec(resource[:id], m[:name], m, &Apipie.configuration.authorize)
@@ -138,17 +213,20 @@ module Apipie
       end
     end
 
-    def get_format
+    def set_format_from_extension
       [:resource, :method, :version].each do |par|
         next unless params[par]
+
         [:html, :json].each do |format|
           extension = ".#{format}"
+
           if params[par].include?(extension)
             params[par] = params[par].sub(extension, '')
             params[:format] = format
           end
         end
       end
+
       request.format = params[:format] if params[:format]
     end
 
@@ -193,6 +271,11 @@ module Apipie
       yield
     ensure
       Apipie.request_script_name = nil
+    end
+
+    # @return [DocPresenter]
+    def doc_presenter
+      @doc_presenter ||= DocPresenter.new(@doc)
     end
   end
 end

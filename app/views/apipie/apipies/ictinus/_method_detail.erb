@@ -1,0 +1,44 @@
+<%= raw method[:full_description] %>
+
+<% unless method[:formats].blank? %>
+  <%= heading(t('apipie.supported_formats'), h_level) %>
+  <%= method[:formats].join(', ') %>
+<% end %>
+
+<% unless method[:errors].blank? %>
+  <%= heading(t('apipie.errors'), h_level) %>
+  <%= render(:partial => "errors", :locals => { :errors => method[:errors] }) %>
+<% end %>
+
+<% unless method[:metadata].blank? %>
+  <%= heading(t('apipie.metadata'), h_level) %>
+  <%= render(:partial => "metadata", :locals => { :meta => method[:metadata] }) %>
+<% end %>
+
+<% unless method[:examples].blank? %>
+  <%= heading(t('apipie.examples'), h_level) %>
+  <% method[:examples].each do |example| %>
+    <pre class="prettyprint"><%= example %></pre>
+  <% end %>
+<% end %>
+
+<% if method[:params].present? %>
+  <h4>Query parameters</h4>
+  <table class='table'>
+    <tbody>
+      <%= render partial: "#{theme_path}/params", locals: { :params => method[:params] } %>
+    </tbody>
+  </table>
+<% end %>
+
+<% if method[:returns].present? %>
+  <h4>Responses</h4>
+
+  <div id="accordion" role="tablist" aria-multiselectable="true">
+    <% method[:returns].each do |item| %>
+      <%= render partial: "#{theme_path}/response", locals: { response: item } %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= render(partial: "#{theme_path}/headers", locals: { :headers => method[:headers], :h_level => h_level }) %>

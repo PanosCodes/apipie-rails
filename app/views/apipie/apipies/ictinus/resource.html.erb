@@ -1,0 +1,64 @@
+<div class='page-header'>
+  <h1>
+    <%= @resource[:name] %>
+    <% if @resource[:deprecated] %>
+      <code>DEPRECATED</code>
+    <% end %>
+    <br>
+    <small><%= raw @resource[:short_description] %></small>
+  </h1>
+</div>
+
+<% unless @resource[:full_description].blank? %>
+  <div><%= raw @resource[:full_description] %></div>
+<% end %>
+
+<% unless @resource[:metadata].blank? %>
+  <h2>Metadata</h2>
+  <%= render(:partial => "metadata", :locals => { :meta => @resource[:metadata] }) %>
+<% end %>
+
+<% unless @resource[:formats].blank? %>
+  <h2>Supported Formats</h2>
+  <%= @resource[:formats].join(', ') %>
+<% end %>
+
+<%= render(:partial => 'headers', :locals => { headers: @resource[:headers], h_level: 2 }) %>
+
+<% @resource[:methods].select { |method| method[:show] }.each do |m| %>
+
+  <div class="card mb-2">
+    <ul class="list-group list-group-flush">
+      <% m[:apis].each do |api| %>
+        <li class="list-group-item">
+          <%= render partial: "#{theme_path}/http_method", locals: { http_method: api[:http_method] } %>
+
+          <a href='<%= m[:doc_url] %><%= @doc[:link_extension] %>'>
+            <%= api[:api_url] %>
+          </a>
+
+          <% if api[:deprecated] %>
+            <code>DEPRECATED</code>
+          <% end %>
+          <br>
+
+          <small><%= raw api[:short_description] %></small>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+
+  <% unless m[:see].empty? %>
+    Also
+    see <%= m[:see].map { |s| link_to(s[:description], "#{s[:link]}#{@doc[:link_extension]}") }.to_sentence.html_safe %>
+    .
+  <% end %>
+
+  <div id='description-<%= m[:name] %>' class='collapse accordion-body'>
+    <%= render(:partial => "method_detail", :locals => { :method => m, :h_level => 3 }) %>
+  </div>
+<% end %>
+
+<% unless content_for(:apipie_footer) == @doc[:copyright] %>
+  <%= content_for :apipie_footer, raw(@doc[:copyright]) %>
+<% end %>

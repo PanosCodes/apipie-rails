@@ -1,0 +1,82 @@
+<% level ||= 0 %>
+<% padding_left = level * 40 %>
+
+<% params.each do |param| %>
+  <% if !param[:show] %>
+    <%= render(partial: "#{theme_path}/params", locals: { :level => level, params: param[:params] }) unless param[:params].blank? %>
+    <% next %>
+  <% end %>
+
+  <tr data-toggle="collapse" class="accordion-toggle">
+    <td style="padding-left: <%= padding_left %>px;">
+      <div class="row">
+
+        <% if param[:params].present? %>
+          <div class="col-1">
+            <a href="" data-bs-toggle="collapse" data-bs-target="#<%= param_description_id(param) %>">
+              <i class="bi bi-plus-square-fill me-2 align-items-start"></i>
+            </a>
+          </div>
+        <% end %>
+        <div class="col-10 flex-column">
+          <p class="mb-0">
+            <strong><%= param[:name] %></strong>
+            <% if param[:deprecated].present? %>
+              <small class="text-danger">
+                <%= t('apipie.deprecated').upcase %>
+              </small>
+            <% end %>
+          </p>
+          <small class="<%= param[:required] ? 'text-danger' : 'text-muted' %>">
+            <%= param[:required] ? t('apipie.required') : t('apipie.optional') %>
+          </small>
+
+          <small>
+            <%= param[:allow_nil] ? ', ' + t('apipie.nil_allowed') : '' %>
+          </small>
+        </div>
+
+      </div>
+    </td>
+
+    <td>
+      <%= param[:description].html_safe %>
+
+      <%- if param[:validations].present? || param[:validator].present? %>
+        <p class="mb-0"><strong>Validations:</strong></p>
+        <ul>
+          <%- if param[:validator].present? %>
+            <li><%= Apipie.markup_to_html(param[:validator]).html_safe %></li>
+          <%- end %>
+          <%- if param[:validations].present? %>
+            <%- param[:validations].each do |item| %>
+              <li><%= item.html_safe %></li>
+            <%- end %>
+          <%- end %>
+        </ul>
+      <%- end %>
+
+      <%= render partial: "#{theme_path}/deprecation", locals: { deprecation: param[:deprecation] } %>
+
+      <% unless param[:metadata].blank? %>
+        <br>
+        Metadata:
+        <%= render partial: "#{theme_path}/metadata", :locals => { meta: param[:metadata] } %>
+      <% end %>
+    </td>
+  </tr>
+
+  <% if param[:params].present? %>
+    <tr class="collapse" id="<%= param_description_id(param) %>">
+      <td colspan="2">
+        <table class="table">
+          <%= render partial: "#{theme_path}/params",
+            locals: {
+              params: param[:params],
+              level: level + 1,
+            } %>
+        </table>
+      </td>
+    </tr>
+  <% end %>
+<% end %>
