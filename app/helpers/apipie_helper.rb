@@ -7,4 +7,11 @@ module ApipieHelper
     end
   end
 
+  def theme_path
+    'apipie/apipies'
+  end
+
+  def apipies?
+    Apipie.configuration.layout == 'apipie/apipies'
+  end
 end
