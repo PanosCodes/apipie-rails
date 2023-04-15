@@ -1,0 +1,25 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <%= @doc[:name].upcase %>
+    </li>
+
+    <% if @resource.present? %>
+      <li class="breadcrumb-item">
+        <%= @resource[:version] %>
+      </li>
+    <% end %>
+
+    <% if @resource.present? %>
+      <li class="breadcrumb-item">
+        <%= @resource[:name].upcase %>
+      </li>
+    <% end %>
+
+    <% if @method.present? %>
+      <li class="breadcrumb-item">
+        <%= @method[:name].upcase %>
+      </li>
+    <% end %>
+  </ol>
+</nav>

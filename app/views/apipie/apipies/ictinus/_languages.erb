@@ -1,0 +1,12 @@
+<% if @languages && @languages.size > 1 %>
+  <div class="d-flex me-3">
+    <div class="list-group list-group-horizontal">
+      <% @languages.each do |language| %>
+        <a href='<%= request.fullpath.gsub(".#{@language}.html", ".#{language}.html") %>'
+           class="list-group-item list-group-item-action <%= language == @language ? 'list-group-item-secondary' : '' %>">
+          <%= language %>
+        </a>
+      <% end %>
+    </div>
+  </div>
+<% end %>
