@@ -1,0 +1,16 @@
+<% if languages? %>
+  <div class="navbar-text">
+    <div class="input-group flex-nowrap">
+      <span class="input-group-text" id="addon-wrapping">Language</span>
+      <select class="form-select form-select-sm" aria-label=".form-select-sm">
+        <% @languages.each do |language| %>
+          <!--        <a href='<%#= request.fullpath.gsub(".#{@language}.html", ".#{language}.html") %>'-->
+          <!--           class="list-group-item list-group-item-action <%#= language == @language ? 'list-group-item-secondary' : '' %>">-->
+          <%#= language %>
+          <!--        </a>-->
+          <option <%= language == @language ? 'selected' : '' %>><%= language %></option>
+        <% end %>
+      </select>
+    </div>
+  </div>
+<% end %>

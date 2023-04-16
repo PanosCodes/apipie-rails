@@ -8,7 +8,11 @@ module ApipieHelper
   end
 
   def theme_path
-    'apipie/apipies'
+    if Apipie.configuration.layout == 'apipie/ictinus'
+      'apipie/ictinus'
+    else
+      'apipie/apipies'
+    end
   end
 
   def apipies?

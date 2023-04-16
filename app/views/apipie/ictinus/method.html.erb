@@ -1,0 +1,28 @@
+<% @method[:apis].each do |api| %>
+  <div class='page-header'>
+    <h3>
+      <%= render partial: "#{theme_path}/http_method", locals: { http_method: api[:http_method] } %>
+      <%= api[:api_url] %>
+      <% if api[:deprecated] %>
+
+        <%= render partial: "#{theme_path}/deprecated" %>
+      <% end %>
+      <br>
+      <small><%= raw api[:short_description] %></small>
+    </h3>
+  </div>
+<% end %>
+
+<div>
+  <% unless @method[:see].empty? %>
+    Also
+    see <%= @method[:see].map { |s| link_to(s[:description], "#{s[:link]}#{@doc[:link_extension]}") }.to_sentence.html_safe %>
+    .
+  <% end %>
+
+  <%= render partial: "#{theme_path}/method_detail", locals: { method: @method, h_level: 2 } %>
+</div>
+
+<% unless content_for(:apipie_footer) == @doc[:copyright] %>
+  <%= content_for :apipie_footer, raw(@doc[:copyright]) %>
+<% end %>

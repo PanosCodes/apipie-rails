@@ -1,0 +1,26 @@
+<div class="card">
+  <h5 class="card-header" role="tab" id="headingOne">
+    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne" class="d-inline-flex align-items-center text-decoration-none">
+      <%= render :partial => "#{theme_path}/status_code", locals: { status_code: response[:code] } %>
+      <%= response[:description] %>
+    </a>
+  </h5>
+
+  <div id="collapseOne" class="collapse show" role="tabpanel" aria-labelledby="headingOne">
+    <div class="card-body">
+      <table class='table'>
+        <thead>
+        <tr>
+          <th><%= t('apipie.param_name') %></th>
+          <th><%= t('apipie.description') %></th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <%= render partial: "#{theme_path}/params", locals: { params: response[:returns_object] } %>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,14 @@
+<div class="navbar-text me-3">
+  <div class="input-group flex-nowrap">
+    <span class="input-group-text" id="addon-wrapping">Version</span>
+    <select class="form-select form-select-sm" aria-label=".form-select-sm">
+      <% @versions.each do |version| %>
+        <option
+          <%  %>
+          value="<%= version %>">
+          <%= version %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+</div>

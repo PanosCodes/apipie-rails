@@ -1,0 +1,11 @@
+<aside class="flex-shrink-0 p-3 ">
+  <% examples.each do |record| %>
+    <%= record %>
+    <code>
+        <pre>
+        <%= JSON.pretty_generate(record['response_data']) %>
+        </pre>
+    </code>
+  <% end %>
+</aside>
+

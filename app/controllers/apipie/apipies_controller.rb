@@ -2,6 +2,7 @@ module Apipie
   class ApipiesController < ActionController::Base
     include ActionView::Context
     include ApipieHelper
+    include ThemeIctinusHelper
 
     layout Apipie.configuration.layout
 
@@ -47,6 +48,10 @@ module Apipie
       end
     end
 
+    def versions
+      render "#{theme_path}/versions"
+    end
+
     def resource
       render "#{theme_path}/resource"
     end
@@ -90,7 +95,12 @@ module Apipie
       if swagger?
         @doc = Apipie.to_swagger_json(@version, params[:resource], params[:method], @language)
       else
-        @doc = Apipie.to_json(params[:version], params[:resource], params[:method], @language)
+        if apipies?
+          @doc = Apipie.to_json(params[:version], params[:resource], params[:method], @language)
+        else
+          @doc = Apipie.to_json(params[:version], nil, nil, @language)
+        end
+
         @doc = authorized_doc
       end
 

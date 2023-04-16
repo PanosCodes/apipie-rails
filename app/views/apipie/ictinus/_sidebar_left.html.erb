@@ -1,0 +1,27 @@
+<aside class="flex-shrink-0">
+  <ul class="list-unstyled ps-0">
+    <% sidebar_items.each do |item| %>
+      <li class="mb-1">
+        <button class="btn btn-toggle align-items-center rounded"
+                data-bs-toggle="collapse"
+                data-bs-target="#<%= item[:name] %>-collapse" aria-expanded="true">
+          <%= item[:name] %>
+        </button>
+
+        <div class="collapse show" id="<%= item[:name] %>-collapse">
+          <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+            <% item[:children].each do |child| %>
+              <li>
+                <a href="<%= child[:url] %>"
+                   class="link-dark rounded <%= child[:selected] ? 'selected-nav-item' : '' %>">
+                  <%= render partial: "#{theme_path}/http_method", locals: { http_method: child[:badge_text] } %>
+                  <%= child[:name] %>
+                </a>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+</aside>

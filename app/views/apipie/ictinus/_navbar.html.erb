@@ -1,0 +1,16 @@
+<nav class="navbar navbar-expand-md sticky-top bg-white shadow-sm px-5">
+  <div class="container-fluid">
+    <span class="navbar-brand"><%= @doc[:name].upcase %></span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <%= render partial: "#{theme_path}/navbar_menu" %>
+      <%= render partial: "#{theme_path}/navbar_versions" %>
+      <%= render partial: "#{theme_path}/navbar_languages" %>
+    </div>
+  </div>
+</nav>
+
+
