@@ -31,6 +31,10 @@ module Apipie
 
       # find the right validator for given options
       def self.find(param_description, argument, options, block)
+        if argument.respond_to?(:call)
+          argument = argument.call
+        end
+
         @validators.each do |validator_type|
           validator = validator_type.build(param_description, argument, options, block)
           return validator if validator
